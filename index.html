@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MAIT College Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f7fa;
+      color: #333;
+    }
+
+    header {
+      background-color: #2c3e50;
+      padding: 20px;
+      text-align: center;
+      color: white;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    #question-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    ul.options-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    ul.options-list li {
+      margin: 10px 0;
+      padding: 12px;
+      background: #ecf0f1;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    ul.options-list li:hover {
+      background: #dfe6e9;
+    }
+
+    ul.options-list li.selected {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .correct::after {
+      content: ' ✔️';
+      color: green;
+    }
+
+    .incorrect::after {
+      content: ' ✖️';
+      color: red;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      background-color: #2980b9;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1abc9c;
+    }
+
+    #feedback {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #progress-bar {
+      height: 8px;
+      background: linear-gradient(to right, #27ae60 0%, #2ecc71 0%);
+      transition: width 0.4s ease-in-out;
+      margin-top: 20px;
+      border-radius: 5px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MAIT College Quiz</h1>
+  </header>
+
+  <main>
+    <div id="quiz-container">
+      <div id="question-box">
+        <h2 id="question">Loading question...</h2>
+        <ul id="options" class="options-list"></ul>
+        <button id="submit-btn">Submit Answer</button>
+        <div id="feedback"></div>
+      </div>
+      <div id="progress-bar"></div>
+    </div>
+
+    <div id="result-screen" class="hidden">
+      <h2>Your Score: <span id="score"></span>/10</h2>
+      <button onclick="restartQuiz()">Retake Quiz</button>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 MAIT Web Technologies Project</p>
+  </footer>
+
+  <script>
+    const questions = [
+      {
+        question: "When was MAIT established?",
+        options: ["1999", "2003", "2000", "2001"],
+        answer: "1999"
+      },
+      {
+        question: "What is the full form of MAIT?",
+        options: [
+          "Maharaja Agrasen Institute of Technology",
+          "Modern Academy of IT",
+          "Metro Academy for IT",
+          "Maharana Agrasen Institute of Tech"
+        ],
+        answer: "Maharaja Agrasen Institute of Technology"
+      },
+      {
+        question: "Which department offers AI & ML?",
+        options: [
+          "Computer Science",
+          "Information Technology",
+          "Artificial Intelligence",
+          "AI & Machine Learning Department"
+        ],
+        answer: "AI & Machine Learning Department"
+      },
+      {
+        question: "MAIT is affiliated with which university?",
+        options: ["IP University", "Delhi University", "Jamia Millia Islamia", "JNU"],
+        answer: "IP University"
+      },
+      {
+        question: "What is the name of MAIT's annual tech fest?",
+        options: ["TechTribe", "Euphoria", "TechSurge", "Innovision"],
+        answer: "TechSurge"
+      },
+      {
+        question: "Where is MAIT located?",
+        options: ["Dwarka", "Rohini", "Pitampura", "Janakpuri"],
+        answer: "Rohini"
+      },
+      {
+        question: "What is the duration of B.Tech at MAIT?",
+        options: ["3 years", "4 years", "5 years", "6 years"],
+        answer: "4 years"
+      },
+      {
+        question: "Which course is NOT offered at MAIT?",
+        options: ["BCA", "B.Tech", "MBA", "PhD"],
+        answer: "BCA"
+      },
+      {
+        question: "Which programming language is taught in 1st year?",
+        options: ["Python", "C", "Java", "Ruby"],
+        answer: "C"
+      },
+      {
+        question: "Which of the following is a core subject in AI?",
+        options: ["DSA", "Web Dev", "Soft Skills", "Finance"],
+        answer: "DSA"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const feedbackEl = document.getElementById("feedback");
+    const submitBtn = document.getElementById("submit-btn");
+    const resultScreen = document.getElementById("result-screen");
+    const scoreEl = document.getElementById("score");
+    const progressBar = document.getElementById("progress-bar");
+
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      questionEl.textContent = q.question;
+      optionsEl.innerHTML = "";
+
+      q.options.forEach(option => {
+        const li = document.createElement("li");
+        li.textContent = option;
+        li.addEventListener("click", () => {
+          document.querySelectorAll("li").forEach(el => el.classList.remove("selected"));
+          li.classList.add("selected");
+        });
+        optionsEl.appendChild(li);
+      });
+
+      feedbackEl.innerHTML = "";
+      updateProgressBar();
+    }
+
+    submitBtn.addEventListener("click", () => {
+      const selected = document.querySelector("li.selected");
+      if (!selected) {
+        alert("Please select an option!");
+        return;
+      }
+
+      const answer = selected.textContent.replace('✔️', '').trim();
+      const correct = questions[currentQuestion].answer;
+
+      if (answer === correct) {
+        feedbackEl.innerHTML = "Correct! 🎉";
+        selected.classList.add("correct");
+        score++;
+      } else {
+        feedbackEl.innerHTML = `Incorrect! Correct answer: ${correct}`;
+        selected.classList.add("incorrect");
+        const correctLi = [...document.querySelectorAll("li")].find(
+          li => li.textContent === correct
+        );
+        if (correctLi) correctLi.classList.add("correct");
+      }
+
+      submitBtn.disabled = true;
+
+      setTimeout(() => {
+        currentQuestion++;
+        if (currentQuestion < questions.length) {
+          submitBtn.disabled = false;
+          loadQuestion();
+        } else {
+          showResult();
+        }
+      }, 2000);
+    });
+
+    function showResult() {
+      document.getElementById("quiz-container").classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+      scoreEl.textContent = score;
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      resultScreen.classList.add("hidden");
+      document.getElementById("quiz-container").classList.remove("hidden");
+      loadQuestion();
+    }
+
+    function updateProgressBar() {
+      const percentage = ((currentQuestion) / questions.length) * 100;
+      progressBar.style.background = `linear-gradient(to right, #27ae60 ${percentage}%, #ecf0f1 ${percentage}%)`;
+    }
+
+    window.onload = loadQuestion;
+  </script>
+</body>
+</html>
